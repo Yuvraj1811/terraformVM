@@ -41,6 +41,32 @@ jobs:
           backendAzureRmContainerName: 'strgcontainer'
           backendAzureRmKey: 'terraform.tfstate'
 
+      - task: TerraformTask@5
+        displayName: Terraform fmt
+        inputs:
+          provider: 'azurerm'
+          command: 'custom'
+          outputTo: 'console'
+          customCommand: 'fmt'
+          workingDirectory: $(workDir)
+          environmentServiceNameAzureRM: 'MyServerConnection1'
+
+      - task: TerraformTask@5
+        displayName: Terraform validate
+        inputs:
+          provider: 'azurerm'
+          command: 'validate'
+          workingDirectory: $(workDir)
+          environmentServiceNameAzureRM: 'MyServerConnection1'
+
+      - task: TerraformTask@5
+        displayName: Terraform plan
+        inputs:
+          provider: 'azurerm'
+          command: 'plan'
+          workingDirectory: $(workDir)
+          environmentServiceNameAzureRM: 'MyServerConnection1'
+
   - job: TFScanningJob
     condition: eq(${{ parameters.ScanningRequired}}, 'true')
     displayName: TFSEC Scanning Job
