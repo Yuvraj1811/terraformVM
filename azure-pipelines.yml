@@ -17,7 +17,7 @@ parameters:
       - false
 
 variables:
-   workDir: '$()'
+   workDir: '$(System.DefaultWorkingDirectory)'
 
 jobs:
   - job: TerraformInitFmtValidate
@@ -29,5 +29,33 @@ jobs:
 
   - job: TerraformInitPlan
     displayName: Terraform Init and Plan
+    steps:
+      - task: TerraformInstaller@1
+        inputs:
+          terraformVersion: 'latest'
+  
+      - task: TerraformTask@5
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          workingDirectory: $(workDir)
+          backendServiceArm: 'MyServerConnection1'
+          backendAzureRmResourceGroupName: 'rg-backend'
+          backendAzureRmStorageAccountName: 'strgaccbackend'
+          backendAzureRmContainerName: 'strgcontainer'
+          backendAzureRmKey: 'terraform.tfstate'
+
+  - job: TFScanningJob
+    condition: eq(${{ parameters.ScanningRequired}}, 'true')
+    displayName: TFSEC Scanning Job
+    pool: MyAgentCI
+    steps:
+      - task: tfsec@1
+        inputs:
+          version: 'v1.26.0'
+          dir: $(workDir)
+
+        
+      
     
       
