@@ -1,8 +1,3 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - main
 
@@ -12,12 +7,13 @@ parameters:
   - name: ScanningRequired
     displayName: Scanning Required?
     type: string
+    default: 'false'
     values:
       - true
       - false
 
 variables:
-   workDir: '$()'
+   workDir: '$(System.DefaultWorkingDirectory)'
 
 jobs:
   - job: TerraformInitFmtValidate
@@ -29,5 +25,75 @@ jobs:
 
   - job: TerraformInitPlan
     displayName: Terraform Init and Plan
+    steps:
+      - task: TerraformInstaller@1
+        inputs:
+          terraformVersion: 'latest'
+  
+      - task: TerraformTask@5
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          workingDirectory: $(workDir)
+          backendServiceArm: 'MyServerConnection1'
+          backendAzureRmResourceGroupName: 'rg-backend'
+          backendAzureRmStorageAccountName: 'strgaccbackend'
+          backendAzureRmContainerName: 'strgcontainer'
+          backendAzureRmKey: 'terraform.tfstate'
+
+  - job: TFScanningJob
+    condition: eq(${{ parameters.ScanningRequired}}, 'true')
+    displayName: TFSEC Scanning Job
+    pool: MyAgentCI
+    steps:
+      - task: tfsec@1
+        inputs:
+          version: 'v1.26.0'
+          dir: $(workDir)
+
+  - job: TfLintScanningJob  
+    condition: eq(${{ parameters.ScanningRequired}}, 'true')
+    displayName: TFLINT Scanning Job
+    pool: MyAgentCI
+    steps:
+      - task: CmdLine@2
+        inputs:
+          script: 'echo Hello world'
+
+  - job: ManualValidation
+    displayName: Manual Validation
+    dependsOn: TerraformInitPlan
+    pool: server
+    steps:
+      
+     - task: ManualValidation@1
+       inputs:
+        notifyUsers: 'dataai@bminfotradegroup.com'
+        approvers: 'dataai@bminfotradegroup.com'
+        instructions: 'Check Plan'
+  
+  - job: TerraformApply
+    displayName: Terraform apply
+    dependsOn: ManualValidation
+    pool: MyAgentCI
+    steps:
+       - task: TerraformTask@5
+         inputs:
+          provider: 'azurerm'
+          command: 'init'
+          workingDirectory: $(workDir)
+          backendServiceArm: 'MyServerConnection1'
+          backendAzureRmResourceGroupName: 'rg-backend'
+          backendAzureRmStorageAccountName: 'strgaccbackend'
+          backendAzureRmContainerName: 'strgcontainer'
+          backendAzureRmKey: 'terraform.tfstate'
+
+       - task: TerraformTask@5
+         displayName: Terraform Apply
+         inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            workingDirectory: $(workDir)
+            environmentServiceNameAzureRM: 'MyServerConnection1'
     
       
