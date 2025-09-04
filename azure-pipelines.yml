@@ -78,12 +78,15 @@ jobs:
     pool: MyAgentCI
     steps:
        - task: TerraformTask@5
-         displayName: Terraform init
          inputs:
-           provider: 'azurerm'
-           command: 'init'
-           workingDirectory: $(workDir)
-           backendServiceArm: 'MyServerConnection1'
+          provider: 'azurerm'
+          command: 'init'
+          workingDirectory: $(workDir)
+          backendServiceArm: 'MyServerConnection1'
+          backendAzureRmResourceGroupName: 'rg-backend'
+          backendAzureRmStorageAccountName: 'strgaccbackend'
+          backendAzureRmContainerName: 'strgcontainer'
+          backendAzureRmKey: 'terraform.tfstate'
 
        - task: TerraformTask@5
          displayName: Terraform Apply
