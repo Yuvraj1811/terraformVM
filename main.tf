@@ -7,7 +7,7 @@ resource "azurerm_resource_group" "rg" {
 //strg
 resource "azurerm_storage_account" "strg" {
   for_each                 = var.stgs
-  name                     = each.value.name
+  name                     = each.value.strg_name 
   resource_group_name      = each.value.resource_group_name
   location                 = each.value.location
   account_tier             = each.value.account_tier

@@ -7,7 +7,7 @@ rgs = {
 
 stgs = {
   stg1 = {
-    name                     = "strgtest987"
+    strg_name                     = "strgtest987"
     resource_group_name      = "test-rg"
     location                 = "Central India"
     account_tier             = "Standard"
